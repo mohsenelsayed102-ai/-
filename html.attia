@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* المتغيرات والألوان الرسمية المستخرجة من موقعك (Gov Design System) */
+    /* المتغيرات والألوان الرسمية للموقع (Gov Design System) */
     :root {
       --gov-navy: #003366;
       --gov-navy-dark: #002244;
@@ -61,7 +61,7 @@
       padding: 40px 20px;
     }
 
-    /* الحاوية الرئيسية للهيكل الملكي */
+    /* الحاوية الرئيسية للكارت الملكي */
     .gov-card {
       background-color: var(--gov-white);
       border-top: 6px solid var(--gov-navy);
@@ -129,11 +129,14 @@
       box-shadow: 0 0 0 4px rgba(0, 90, 156, 0.1);
     }
 
-    /* إزالة الأسهم الافتراضية من حقل الأرقام */
+    /* إزالة الأسهم الافتراضية المزعجة من حقل الأرقام */
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
     }
 
     .btn-submit {
@@ -206,6 +209,11 @@
       background-color: var(--gov-success-bg);
       color: var(--gov-success);
     }
+    
+    .status-danger {
+      background-color: var(--gov-danger-bg);
+      color: var(--gov-danger);
+    }
 
     .alert-message {
       display: none;
@@ -216,6 +224,7 @@
       font-weight: 600;
       background-color: var(--gov-danger-bg);
       color: var(--gov-danger);
+      text-align: center;
     }
 
     .loading-spinner {
@@ -245,6 +254,7 @@
       cursor: pointer;
       margin-top: 20px;
       font-family: var(--font-primary);
+      transition: background 0.2s ease;
     }
 
     .btn-back:hover {
@@ -256,6 +266,7 @@
       font-size: 12px;
       color: var(--gov-text-muted);
       font-weight: 500;
+      text-align: center;
     }
   </style>
 </head>
@@ -269,7 +280,7 @@
     <div id="search-section">
       <div class="search-group">
         <label for="seat-code">الاستعلام برقم الجلوس رسميًا:</label>
-        <input type="number" id="seat-code" placeholder="أدخل رقم جلوس الطالب المكون من أرقام...">
+        <input type="number" id="seat-code" placeholder="أدخل رقم جلوس الطالب المكون من أرقام..." onkeypress="if(event.key === 'Enter') searchResult()">
       </div>
       <button class="btn-submit" onclick="searchResult()">استعلام عن النتيجة</button>
     </div>
@@ -299,7 +310,7 @@
       </div>
       <div class="data-row">
         <span class="data-label">حالة الاعتماد العام:</span>
-        <span class="status-badge status-success" id="out-status">ناجح</span>
+        <span class="status-badge" id="out-status">-</span>
       </div>
 
       <button class="btn-back" onclick="resetForm()">العودة لاستعلام جديد</button>
@@ -309,7 +320,7 @@
   <footer>جميع الحقوق محفوظة لمدرسة الشهيد حمادة فهمي مباشر © 2026</footer>
 
   <script>
-    // ضع هنا رابط الـ Web App الخاص بـ Google Apps Script الذي يجلب بيانات الـ Sheets
+    // رابط السكريبت المعتمد والنشط حالياً لربط قاعدة البيانات
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx00I2C8ggJbaOsqN2PSzjrNBPw8jMePctm3heA62u1_bgWcow72IjHUhqeBHcJR5wZ/exec"; 
 
     function searchResult() {
@@ -319,7 +330,7 @@
       const alertBox = document.getElementById('alert-box');
       const loader = document.getElementById('loader');
 
-      // تصفير وتنظيف الحالات السابقة
+      // تهيئة وإخفاء الحالات والأخطاء السابقة
       alertBox.style.display = "none";
       resultBox.style.display = "none";
 
@@ -329,27 +340,37 @@
         return;
       }
 
-      // إظهار الدوران للتحميل
+      // تشغيل دائرة التحميل
       loader.style.display = "block";
 
-      // دالة الجلب والربط البرمجي بالـ API
+      // بدء معالجة وجلب البيانات من الـ Web App المربوط بـ Google Sheets
       fetch(`${WEB_APP_URL}?seatNumber=${seatValue}`)
         .then(response => response.json())
         .then(data => {
           loader.style.display = "none";
 
           if (data && data.status === "success") {
-            // إخفاء مدخلات البحث لتقديم النتيجة بنقاء
+            // إخفاء صندوق البحث لتنسيق الواجهة وظهور النتيجة منفردة
             searchBox.style.display = "none";
 
-            // تعبئة البيانات في الخانات المناسبة
-            document.getElementById('out-name').innerText = data.studentName;
-            document.getElementById('out-seat').innerText = data.seatNumber;
-            document.getElementById('out-total').innerText = data.totalScore;
-            document.getElementById('out-percent').innerText = data.percentage + "%";
-            document.getElementById('out-status').innerText = data.studentStatus || "ناجح";
+            // ملء بيانات الطالب المسترجعة ديناميكياً
+            document.getElementById('out-name').innerText = data.studentName || "-";
+            document.getElementById('out-seat').innerText = data.seatNumber || "-";
+            document.getElementById('out-total').innerText = data.totalScore || "-";
+            document.getElementById('out-percent').innerText = (data.percentage || "-") + "%";
+            
+            // معالجة حالة الطالب (تغيير لون شارة الحالة حسب النتيجة)
+            const statusElement = document.getElementById('out-status');
+            const studentStatus = data.studentStatus || "ناجح";
+            statusElement.innerText = studentStatus;
+            
+            if (studentStatus.includes("راسب") || studentStatus.includes("دور ثان")) {
+              statusElement.className = "status-badge status-danger";
+            } else {
+              statusElement.className = "status-badge status-success";
+            }
 
-            // إظهار لوحة النتيجة كاملة
+            // إظهار لوحة النتيجة المعتمدة
             resultBox.style.display = "block";
           } else {
             alertBox.innerText = "خطأ: رقم الجلوس المدخل غير مدرج بملفات النتيجة الحالية.";
@@ -365,9 +386,11 @@
     }
 
     function resetForm() {
+      // إعادة تصفير المدخلات للبدء من جديد عند طلب استعلام آخر
       document.getElementById('seat-code').value = "";
       document.getElementById('result-section').style.display = "none";
       document.getElementById('search-section').style.display = "block";
+      document.getElementById('alert-box').style.display = "none";
     }
   </script>
 </body>
